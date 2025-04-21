@@ -3,16 +3,17 @@
 var VSHADER_SOURCE = `
   attribute vec4 a_Position; 
   uniform mat4  u_ModelMatrix;
+  uniform mat4 u_GlobalRotateMatrix; 
   void main()  {
 
-  gl_Position =  u_ModelMatrix * a_Position;
+  gl_Position =  u_GlobalRotateMatrix * u_ModelMatrix * a_Position;
 
   }`
 
 // Fragment shader program
 var FSHADER_SOURCE =`
   precision mediump float;
-  uniform vec4 u_FragColor;\n
+  uniform vec4 u_FragColor;
   void main() {
   gl_FragColor = u_FragColor;
   }`
@@ -69,6 +70,13 @@ function connectVariablesToGLSL() {
     return;
   }
 
+  u_GlobalRotateMatrix = gl.getUniformLocation(gl.program, 'u_GlobalRotateMatrix');
+  if (!u_GlobalRotateMatrix) {
+    console.log('Failed to get the storage location of u_GlobalRotateMatrix');
+    return;
+  }
+
+
   //set an intital value for this matrix to identity
   var identityM = new Matrix4(); // Create a matrix object
   gl.uniformMatrix4fv(u_ModelMatrix, false, identityM.elements); // Pass the matrix to u_ModelMatrix attribute
@@ -85,6 +93,19 @@ const CIRCLE = 2; // Circle type
 let g_selectedColor = [1.0, 1.0, 1.0, 1.0]; // Default color is white
 let g_selectedSize = 5; // Default size is 10.0
 let g_selectedType = POINT; // Default type is point
+let g_globalAngle = 0; // Default angle is 0
+
+function addActionForHtmlElement() {
+
+  //Camera Angle Slider
+  document.getElementById('angleSlide').addEventListener('mousemove', function() {
+    g_globalAngle = this.value; // Get the value of the slider
+    //console.log(g_globalAngle);
+    renderAllShapes(); // Redraw the shapes with the new angle
+  });
+}
+
+
 
 
 
@@ -95,6 +116,9 @@ function main() {
   //set up GLSL shader programs and conenct GLSL variables 
   connectVariablesToGLSL()
  
+  //Set up actions for HTML elements
+  addActionForHtmlElement();
+
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -171,8 +195,12 @@ function convertCoordinatesEventToGL(ev){
 function renderAllShapes(){
 
   var startTime = performance.now(); // Start time
+
+  var u_GlobalRotateMat = new Matrix4().rotate(g_globalAngle,0,1,0); // Create a matrix object
+  gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, u_GlobalRotateMat.elements); // Pass the matrix to u_GlobalRotateMatrix attribute
+
   // Clear <canvas>
-  gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   //draw  cube
   var body = new Cube();
