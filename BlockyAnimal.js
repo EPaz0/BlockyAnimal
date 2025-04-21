@@ -2,11 +2,11 @@
 // Vertex shader program
 var VSHADER_SOURCE = `
   attribute vec4 a_Position; 
-  uniform float u_Size;
+  uniform mat4  u_ModelMatrix;
   void main()  {
-  gl_Position = a_Position;
-  //gl_PointSize = 10.0;
-  gl_PointSize = u_Size; 
+
+  gl_Position =  u_ModelMatrix * a_Position;
+
   }`
 
 // Fragment shader program
@@ -23,6 +23,7 @@ let gl;
 let a_Position;
 let u_FragColor;
 let u_Size;
+let u_ModelMatrix; 
 
 function setupWebGL() {
   // Retrieve <canvas> element
@@ -61,12 +62,17 @@ function connectVariablesToGLSL() {
     return;
   }
 
-  // Get the storage location of u_Size
-  u_Size = gl.getUniformLocation(gl.program, 'u_Size');
-  if (!u_Size) {
-    console.log('Failed to get the storage location of u_Size');
+  // Get the storage location of u_ModelMatrix
+  u_ModelMatrix = gl.getUniformLocation(gl.program, 'u_ModelMatrix');
+  if (!u_ModelMatrix) {
+    console.log('Failed to get the storage location of u_ModelMatrix');
     return;
   }
+
+  //set an intital value for this matrix to identity
+  var identityM = new Matrix4(); // Create a matrix object
+  gl.uniformMatrix4fv(u_ModelMatrix, false, identityM.elements); // Pass the matrix to u_ModelMatrix attribute
+
 
 }
 //Constant
@@ -79,14 +85,8 @@ const CIRCLE = 2; // Circle type
 let g_selectedColor = [1.0, 1.0, 1.0, 1.0]; // Default color is white
 let g_selectedSize = 5; // Default size is 10.0
 let g_selectedType = POINT; // Default type is point
-let g_selectedSegments = 10; // Default segments for circle is 10
-let g_mousePosition = null;
-let g_triangleRotation = 0;
-//Add actions for HTML UI elements
-function addActionsForHtmlUI() {
-  
 
-}
+
 
 function main() {
   //Set up canvas and gl variables
@@ -95,12 +95,6 @@ function main() {
   //set up GLSL shader programs and conenct GLSL variables 
   connectVariablesToGLSL()
  
-  //Set up actions for the HTML UI elements
-  addActionsForHtmlUI()
-
-
-
-
 
   // Specify the color for clearing <canvas>
   gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -180,20 +174,30 @@ function renderAllShapes(){
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  // var len = g_points.length;
-  // var len = g_shapesList.length; 
-  // for(var i = 0; i < len; i++) {
-  //   g_shapesList[i].render();
-  // }
-
-  //Draw a triangle test triangle
-  drawTriangle3D([-1.0, 0.0, 0.0,  -0.5, -1.0, 0.0,  0.0, 0.0, 0.0]);
-
   //draw  cube
   var body = new Cube();
   body.color = [1.0, 0.0, 0.0, 1.0]; // Red color
+  body.matrix.setTranslate(-0.25, -0.5, 0.0); // Translate the cube to the right
+  body.matrix.scale(0.5, 1, .5); // Rotate the cube by 45 degrees around the z-axis
   body.render();
 
+  //arm
+  var leftArm = new Cube();
+  leftArm.color = [0.0, 1.0, 0.0, 1.0]; // Green color
+  leftArm.matrix.setTranslate(0.7, 0.0, 0.0); // Translate the cube to the left
+  leftArm.matrix.rotate(45, 0, 0, 1); // Rotate the cube by 45 degrees around the z-axis
+  leftArm.matrix.scale(0.25, .7, .5); // Scale the cube to make it thinner
+  leftArm.render();
+
+
+  var testCube = new Cube();
+  testCube.matrix.setTranslate(-0.7, 0.0, 0.0);
+  testCube.matrix.rotate(45, 0, 25, 1);
+  testCube.matrix.scale(0.2, .2, .2);
+  
+  testCube.render();
+  
+  
   var duration = performance.now() - startTime; // End time
   console.log("Render time: " + duration + " ms"); // Log the render time
 
