@@ -94,6 +94,7 @@ let g_selectedColor = [1.0, 1.0, 1.0, 1.0]; // Default color is white
 let g_selectedSize = 5; // Default size is 10.0
 let g_selectedType = POINT; // Default type is point
 let g_globalAngle = 0; // Default angle is 0
+let g_globalArmAngle = 0; // Default arm angle is 0
 
 function addActionForHtmlElement() {
 
@@ -103,6 +104,15 @@ function addActionForHtmlElement() {
     //console.log(g_globalAngle);
     renderAllShapes(); // Redraw the shapes with the new angle
   });
+
+  //Arm Rotation Slider
+  document.getElementById('leftArmAngle').addEventListener('mousemove', function() {
+    g_globalArmAngle= this.value; // Get the value of the slider
+    //console.log(g_triangleRotation);
+    renderAllShapes(); // Redraw the shapes with the new angle
+  });
+
+
 }
 
 
@@ -121,7 +131,7 @@ function main() {
 
 
   // Specify the color for clearing <canvas>
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  gl.clearColor(0.75, 0.75, 0.75, 1.0);
 
   // Clear <canvas>
   //gl.clear(gl.COLOR_BUFFER_BIT);
@@ -202,28 +212,126 @@ function renderAllShapes(){
   // Clear <canvas>
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+//Head
+  var head = new Cube();
+  head.color = [0.0, 0.0, 0.0, 1.0]; // Red color
+  head.matrix.setTranslate(-0.19, .5, .05);
+  head.matrix.scale(0.4, 0.35, 0.4);
+  head.render();
+
+  //beak upper part
+  var beakUpper = new Cube();
+  beakUpper.color = [1.0, 0.5, 0.0, 1.0]; // Orange color
+  beakUpper.matrix.setTranslate(-0.07, .59, -.08);
+  beakUpper.matrix.scale(0.14, 0.045,0.2);
+  beakUpper.render();
+
+  //beak lower part
+  var beakLower = new Cube();
+  beakLower.color = [1.0, 0.5, 0.0, .97]; // Orange color
+  beakLower.matrix.setTranslate(-0.07, .55, -.08);
+  beakLower.matrix.scale(0.14, 0.045, 0.2);
+  beakLower.render();
+
+  //left eye
+  var leftEye = new Cube();
+  leftEye.color = [1.0, 1.0, 1.0, 1.0]; // white color
+  leftEye.matrix.setTranslate(-0.13, .7, .01);
+  leftEye.matrix.scale(0.1, 0.1, 0.1);
+  leftEye.render();
+//testing
+  // var leftEye = new Cube();
+  // leftEye.color = [1.0, 1.0, 1.0, 1.0]; // white color
+  // leftEye.matrix.setTranslate(-0.14, .5, .001);
+  // leftEye.matrix.scale(0.3, 0.3, 0.1);
+  // leftEye.render();
+
+  //pupil left eye
+  var leftEyePupil = new Cube();
+  leftEyePupil.color = [0.0, 0.0, 0.0, 1.0]; // black color
+  leftEyePupil.matrix.setTranslate(-0.101, .72, -.0011);
+  leftEyePupil.matrix.scale(0.05, 0.06, 0.1);
+  leftEyePupil.render();
+
+  //right eye
+  var rightEye = new Cube();
+  rightEye.color = [1.0, 1.0, 1.0, 1.0]; // white color
+  rightEye.matrix.setTranslate(.05, .7, -.001);
+  rightEye.matrix.scale(0.1, 0.1, 0.1);
+  rightEye.render();
+
+  //pupil right eye
+  var rightPupil = new Cube();
+  rightPupil.color = [0.0, 0.0, 0.0, 1.0]; // black color
+  rightPupil.matrix.setTranslate(.075, .72, -.0011);
+  rightPupil.matrix.scale(0.05, 0.06, 0.1);
+  rightPupil.render();
+
+
   //draw  cube
   var body = new Cube();
-  body.color = [1.0, 0.0, 0.0, 1.0]; // Red color
+  body.color = [0.0, 0.0, 0.0, 1.0]; // Red color
   body.matrix.setTranslate(-0.25, -0.5, 0.0); // Translate the cube to the right
   body.matrix.scale(0.5, 1, .5); // Rotate the cube by 45 degrees around the z-axis
   body.render();
 
-  //arm
-  var leftArm = new Cube();
-  leftArm.color = [0.0, 1.0, 0.0, 1.0]; // Green color
-  leftArm.matrix.setTranslate(0.7, 0.0, 0.0); // Translate the cube to the left
-  leftArm.matrix.rotate(45, 0, 0, 1); // Rotate the cube by 45 degrees around the z-axis
-  leftArm.matrix.scale(0.25, .7, .5); // Scale the cube to make it thinner
-  leftArm.render();
+//white part of the body
+  var whiteBelly = new Cube();
+  whiteBelly.color = [1.0, 1.0, 1.0, 1.0]; // Red color
+  whiteBelly.matrix.setTranslate(-0.16, -0.44, -.01); // Translate the cube to the right
+  //front.matrix.scale(0.5, 1, .5); // Rotate the cube by 45 degrees around the z-axis
+  whiteBelly.matrix.scale(0.33, 0.9, 0.5);
+  whiteBelly.render();
+
+  //yellow part of the body
+  var yellowPart = new Cube();
+  yellowPart.color = [1.0, 1.0, 0.8, 1.0]; // Red color
+  yellowPart.matrix.setTranslate(-0.16, .3, -.011); // Translate the cube to the right
+  yellowPart.matrix.scale(0.33, 0.2, 0.5);
+  yellowPart.render();
+
+// constants so it’s easy to tweak
+const ARM_LEN   = 0.70;   // final height
+const ARM_THICK = 0.07;   // final width
+
+// ------------- LEFT WING, pivot at the shoulder -------------
+var leftArm = new Cube();
+leftArm.color = [0.0, 0.0, 0.0, 1.0]; // Same black color
+leftArm.matrix.setTranslate( .25, .45, .5);
+leftArm.matrix.rotate(180, 180, 0, 1);
+leftArm.matrix.rotate(-g_globalArmAngle, 0, 0, 1);
+leftArm.matrix.scale(ARM_THICK,  ARM_LEN, 0.5); // Same scale
+leftArm.render();
+
+  //right arm
+  var rightArm = new Cube();
+  rightArm.color = [0.0, 0.0, 0.0, 1.0]; // Same black color
+  rightArm.matrix.setTranslate( -0.25, .45, 0);
+  rightArm.matrix.rotate(180, 0, 0, 1);
+  rightArm.matrix.rotate(-g_globalArmAngle, 0, 0, 1);
+  rightArm.matrix.scale(ARM_THICK,  ARM_LEN, 0.5); // Same scale
+  rightArm.render();
+
+  //right foot
+  var rightFoot = new Cube();
+  rightFoot.color = [1.0, 0.5, 0.0, 1.0]; // Orange color
+  rightFoot.matrix.setTranslate(.09, -.55, -.08);
+  rightFoot.matrix.scale(0.14, 0.07,0.5);
+  rightFoot.render();
 
 
-  var testCube = new Cube();
-  testCube.matrix.setTranslate(-0.7, 0.0, 0.0);
-  testCube.matrix.rotate(45, 0, 25, 1);
-  testCube.matrix.scale(0.2, .2, .2);
+  //left foot
+    var leftFoot = new Cube();
+    leftFoot.color = [1.0, 0.5, 0.0, 1.0]; // Orange color
+    leftFoot.matrix.setTranslate(-.23, -.55, -.08);
+    leftFoot.matrix.scale(0.14, 0.07,0.5);
+    leftFoot.render();
+  // var testCube = new Cube();
+  // testCube.matrix.setTranslate(-0.7, 0.0, 0.0);
+  // testCube.matrix.rotate(45, 0, 25, 1);
+  // testCube.matrix.scale(0.2, .2, .2);
   
-  testCube.render();
+  // testCube.render();
   
   
   var duration = performance.now() - startTime; // End time
