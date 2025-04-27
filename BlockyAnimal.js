@@ -112,11 +112,14 @@ function addActionForHtmlElement() {
     renderAllShapes(); // Redraw the shapes with the new angle
   });
 
+  //lower arm angle slider
+  document.getElementById('lowerArmAngle').addEventListener('mousemove', function() {
+    lowerArmAngle= this.value; // Get the value of the slider
+    //console.log(g_triangleRotation);
+    renderAllShapes(); // Redraw the shapes with the new angle
+  });
 
 }
-
-
-
 
 
 function main() {
@@ -291,17 +294,42 @@ function renderAllShapes(){
   yellowPart.render();
 
 // constants so it’s easy to tweak
-const ARM_LEN   = 0.70;   // final height
+const ARM_LEN   = 0.30;   // final height
 const ARM_THICK = 0.07;   // final width
 
 // ------------- LEFT WING, pivot at the shoulder -------------
 var leftArm = new Cube();
-leftArm.color = [0.0, 0.0, 0.0, 1.0]; // Same black color
-leftArm.matrix.setTranslate( .25, .45, .5);
-leftArm.matrix.rotate(180, 180, 0, 1);
+leftArm.color = [0, 0, 0, 1];
+leftArm.matrix.setTranslate(.25, .45, .5);
+leftArm.matrix.rotate(180, 180, 0, 1);          // flip so it points left
 leftArm.matrix.rotate(-g_globalArmAngle, 0, 0, 1);
-leftArm.matrix.scale(ARM_THICK,  ARM_LEN, 0.5); // Same scale
+
+// *** copy the matrix NOW (before we scale!) ***
+var elbowFrame = new Matrix4(leftArm.matrix);
+
+leftArm.matrix.scale(ARM_THICK, ARM_LEN, 0.5);
 leftArm.render();
+
+// ── LOWER ARM ──────────────────────────────────────────────
+var lowLeftArm = new Cube();
+lowLeftArm.color = [0, 0, 0, 1];               // use black later
+lowLeftArm.matrix = new Matrix4(elbowFrame);   // start at the shoulder
+
+//put the cube’s **top-centre** at the elbow
+lowLeftArm.matrix.translate( ARM_THICK * 0.5, ARM_LEN, 0 );
+
+// rotate around that top-centre
+lowLeftArm.matrix.rotate( lowerArmAngle, 0, 0, 1 );
+
+// move the origin back to the corner
+lowLeftArm.matrix.translate( -ARM_THICK * 0.5, 0, 0 );
+
+//stretch the cube into a fore-arm
+lowLeftArm.matrix.scale( ARM_THICK, ARM_LEN, 0.5 );
+
+lowLeftArm.render();   
+
+
 
   //right arm
   var rightArm = new Cube();
@@ -309,8 +337,29 @@ leftArm.render();
   rightArm.matrix.setTranslate( -0.25, .45, 0);
   rightArm.matrix.rotate(180, 0, 0, 1);
   rightArm.matrix.rotate(-g_globalArmAngle, 0, 0, 1);
+  var rightElbowFrame = new Matrix4(rightArm.matrix);
   rightArm.matrix.scale(ARM_THICK,  ARM_LEN, 0.5); // Same scale
   rightArm.render();
+
+
+  //lower right arm
+  var lowRightArm = new Cube();
+  lowRightArm.color = [0.0, 0.0, 0.0, 1.0]; // Same black color
+  lowRightArm.matrix = new Matrix4(rightElbowFrame); // start at the shoulder
+
+  //put the cube’s **top-centre** at the elbow
+  lowRightArm.matrix.translate( ARM_THICK * 0.5, ARM_LEN, 0 );
+
+  // rotate around that top-centre
+  lowRightArm.matrix.rotate( lowerArmAngle, 0, 0, 1 );
+
+  // move the origin back to the corner
+  lowRightArm.matrix.translate( -ARM_THICK * 0.5, 0, 0 );
+
+  //stretch the cube into a fore-arm
+  lowRightArm.matrix.scale( ARM_THICK, ARM_LEN, 0.5 );
+  lowRightArm.render();
+
 
   //right foot
   var rightFoot = new Cube();
