@@ -95,8 +95,18 @@ let g_selectedSize = 5; // Default size is 10.0
 let g_selectedType = POINT; // Default type is point
 let g_globalAngle = 0; // Default angle is 0
 let g_globalArmAngle = 0; // Default arm angle is 0
+let g_lowerArmAngle = 0; // Default arm angle is 0
+let g_armAnimation = true;
+let g_lowerArmAnimation = true;
 
 function addActionForHtmlElement() {
+
+  //Buttons Events
+  document.getElementById('armAnimationStart').onclick = function(){g_armAnimation = true;}; // Set the selected type to point
+  document.getElementById('armAnimationEnd').onclick = function(){g_armAnimation = false;}; // Set the selected
+  
+  document.getElementById('lowerArmAnimationStart').onclick = function(){g_armAnimation = true;}; // Set the selected type to point
+  document.getElementById('lowerArmAnimationEnd').onclick = function(){g_armAnimation = false;};
 
   //Camera Angle Slider
   document.getElementById('angleSlide').addEventListener('mousemove', function() {
@@ -114,7 +124,7 @@ function addActionForHtmlElement() {
 
   //lower arm angle slider
   document.getElementById('lowerArmAngle').addEventListener('mousemove', function() {
-    lowerArmAngle= this.value; // Get the value of the slider
+    g_lowerArmAngle= this.value; // Get the value of the slider
     //console.log(g_triangleRotation);
     renderAllShapes(); // Redraw the shapes with the new angle
   });
@@ -139,9 +149,22 @@ function main() {
   // Clear <canvas>
   //gl.clear(gl.COLOR_BUFFER_BIT);
 
-  renderAllShapes();
+  //renderAllShapes();
+  requestAnimationFrame(tick);
 }
 
+var g_startTime = performance.now()/1000.0;
+var g_seconds = performance.now()/1000.0-g_startTime; // seconds since the start of the program
+
+function tick(){
+  g_seconds = performance.now()/1000.0-g_startTime; // seconds since the start of the program
+  console.log(performance.now());
+
+  updateAnimationAngles();
+  renderAllShapes(); // Draw the shapes
+  requestAnimationFrame(tick); // Request that the browser calls tick
+
+}
 
 
 var g_shapesList = []; // The array for the position of a mouse press
@@ -150,46 +173,7 @@ var g_shapesList = []; // The array for the position of a mouse press
 // var g_sizes = []; // Default size is 10.0
 
 function click(ev) {
-  //Extract the event click and return it in WebGL coordinates
-  let [x,y] = convertCoordinatesEventToGL(ev); 
 
-
-  let point;
-  if(g_selectedType == POINT){
-    point = new Point(); // Create a point object
-  }else if(g_selectedType == TRIANGLE){
-    point = new Triangle(); // Create a triangle object
-    point.rotation = g_triangleRotation;
-  }else if(g_selectedType == CIRCLE){
-    point = new Circle(); // Create a circle object
-    point.segments = g_selectedSegments; // Set the number of segments for the circle
-  }
-  point.position=[x, y];
-  point.color = g_selectedColor.slice(); 
-  point.size = g_selectedSize; 
-  g_shapesList.push(point); 
-
-  // Store the coordinates to g_points array
-  // g_points.push([x, y]);
-
-
-  // g_colors.push(g_selectedColor.slice()); // Store the color to g_colors array
-
-  // g_sizes.push(g_selectedSize); // Store the size to g_size array
-
-  // Store the coordinates to g_points array
-  /*
-  if (x >= 0.0 && y >= 0.0) {      // First quadrant
-    g_colors.push([1.0, 0.0, 0.0, 1.0]);  // Red
-  } else if (x < 0.0 && y < 0.0) { // Third quadrant
-    g_colors.push([0.0, 1.0, 0.0, 1.0]);  // Green
-  } else {                         // Others
-    g_colors.push([1.0, 1.0, 1.0, 1.0]);  // White
-  }*/
-
-
-  //Draw every shape that is supposed to be in the canvas
-  renderAllShapes(); 
 }
 
 //Extract the event click and return it in WebGL coordinates
@@ -203,6 +187,18 @@ function convertCoordinatesEventToGL(ev){
 
   return [x, y];
 }
+
+//Update the angles of everything if currently animated
+function updateAnimationAngles(){
+  if(g_armAnimation){
+    g_globalArmAngle = 80 * Math.abs(Math.sin(g_seconds));
+  }
+
+  if(g_lowerArmAnimation){}{
+    g_lowerArmAngle = 90 * Math.abs(Math.sin(g_seconds));
+  }
+}
+
 
 //Draw every shape that is supposed to be in the canvas
 function renderAllShapes(){
@@ -242,12 +238,6 @@ function renderAllShapes(){
   leftEye.matrix.setTranslate(-0.13, .7, .01);
   leftEye.matrix.scale(0.1, 0.1, 0.1);
   leftEye.render();
-//testing
-  // var leftEye = new Cube();
-  // leftEye.color = [1.0, 1.0, 1.0, 1.0]; // white color
-  // leftEye.matrix.setTranslate(-0.14, .5, .001);
-  // leftEye.matrix.scale(0.3, 0.3, 0.1);
-  // leftEye.render();
 
   //pupil left eye
   var leftEyePupil = new Cube();
@@ -293,41 +283,48 @@ function renderAllShapes(){
   yellowPart.matrix.scale(0.33, 0.2, 0.5);
   yellowPart.render();
 
-// constants so it’s easy to tweak
-const ARM_LEN   = 0.30;   // final height
-const ARM_THICK = 0.07;   // final width
+  // constants so it’s easy to tweak
+  const ARM_LEN   = 0.30;   // final height
+  const ARM_THICK = 0.09;   // final width
+  const t = g_seconds;           // or however you update time
+  const armAngle = -80 * Math.abs(Math.sin(t));
+  // ------------- LEFT WING, pivot at the shoulder -------------
+  var leftArm = new Cube();
+  leftArm.color = [0, 0, 0, 1];
+  leftArm.matrix.setTranslate(.25, .45, .5);
+  leftArm.matrix.rotate(180, 180, 0, 1);          // flip so it points left
 
-// ------------- LEFT WING, pivot at the shoulder -------------
-var leftArm = new Cube();
-leftArm.color = [0, 0, 0, 1];
-leftArm.matrix.setTranslate(.25, .45, .5);
-leftArm.matrix.rotate(180, 180, 0, 1);          // flip so it points left
-leftArm.matrix.rotate(-g_globalArmAngle, 0, 0, 1);
+  leftArm.matrix.rotate(-g_globalArmAngle, 0, 0, 1);
+  // if(g_armAnimation){
+  //   leftArm.matrix.rotate(armAngle,0,0,1);
+  // }else{
+  //   leftArm.matrix.rotate(-g_globalArmAngle, 0, 0, 1);
+  // }
 
-// *** copy the matrix NOW (before we scale!) ***
-var elbowFrame = new Matrix4(leftArm.matrix);
+  // *** copy the matrix NOW (before we scale!) ***
+  var elbowFrame = new Matrix4(leftArm.matrix);
 
-leftArm.matrix.scale(ARM_THICK, ARM_LEN, 0.5);
-leftArm.render();
+  leftArm.matrix.scale(ARM_THICK, ARM_LEN, 0.5);
+  leftArm.render();
 
-// ── LOWER ARM ──────────────────────────────────────────────
-var lowLeftArm = new Cube();
-lowLeftArm.color = [0, 0, 0, 1];               // use black later
-lowLeftArm.matrix = new Matrix4(elbowFrame);   // start at the shoulder
+  // ── LOWER ARM ──────────────────────────────────────────────
+  var lowLeftArm = new Cube();
+  lowLeftArm.color = [0, 0, 0, 1];               // use black later
+  lowLeftArm.matrix = new Matrix4(elbowFrame);   // start at the shoulder
 
-//put the cube’s **top-centre** at the elbow
-lowLeftArm.matrix.translate( ARM_THICK * 0.5, ARM_LEN, 0 );
+  //put the cube’s **top-centre** at the elbow
+  lowLeftArm.matrix.translate( ARM_THICK * 0.5, ARM_LEN, 0 );
 
-// rotate around that top-centre
-lowLeftArm.matrix.rotate( lowerArmAngle, 0, 0, 1 );
+  // rotate around that top-centre
+  lowLeftArm.matrix.rotate( g_lowerArmAngle, 0, 0, 1 );
 
-// move the origin back to the corner
-lowLeftArm.matrix.translate( -ARM_THICK * 0.5, 0, 0 );
+  // move the origin back to the corner
+  lowLeftArm.matrix.translate( -ARM_THICK * 0.5, 0, 0 );
 
-//stretch the cube into a fore-arm
-lowLeftArm.matrix.scale( ARM_THICK, ARM_LEN, 0.5 );
+  //stretch the cube into a fore-arm
+  lowLeftArm.matrix.scale( ARM_THICK, ARM_LEN, 0.5 );
 
-lowLeftArm.render();   
+  lowLeftArm.render();   
 
 
 
@@ -336,7 +333,11 @@ lowLeftArm.render();
   rightArm.color = [0.0, 0.0, 0.0, 1.0]; // Same black color
   rightArm.matrix.setTranslate( -0.25, .45, 0);
   rightArm.matrix.rotate(180, 0, 0, 1);
+
+
   rightArm.matrix.rotate(-g_globalArmAngle, 0, 0, 1);
+  
+  
   var rightElbowFrame = new Matrix4(rightArm.matrix);
   rightArm.matrix.scale(ARM_THICK,  ARM_LEN, 0.5); // Same scale
   rightArm.render();
@@ -351,7 +352,7 @@ lowLeftArm.render();
   lowRightArm.matrix.translate( ARM_THICK * 0.5, ARM_LEN, 0 );
 
   // rotate around that top-centre
-  lowRightArm.matrix.rotate( lowerArmAngle, 0, 0, 1 );
+  lowRightArm.matrix.rotate(g_lowerArmAngle, 0, 0, 1 );
 
   // move the origin back to the corner
   lowRightArm.matrix.translate( -ARM_THICK * 0.5, 0, 0 );
@@ -359,6 +360,7 @@ lowLeftArm.render();
   //stretch the cube into a fore-arm
   lowRightArm.matrix.scale( ARM_THICK, ARM_LEN, 0.5 );
   lowRightArm.render();
+
 
 
   //right foot
