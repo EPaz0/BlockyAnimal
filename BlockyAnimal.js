@@ -199,11 +199,10 @@ function main() {
   setupMouseCamera(); 
   canvas.addEventListener("mousedown", (ev) => {
     if (ev.shiftKey) {
-      // SHIFT-click  →  trigger / toggle a special animation
-      g_pokeAnimation = !g_pokeAnimation;   // flip a flag
+      g_pokeAnimation = true;         // start (do NOT toggle)
+      g_pokeStart     = g_seconds;    // reset the timer
     } else {
-      // normal click behaviour (e.g. draw, select, etc.)
-      click(ev);         // call your existing function, if any
+      click(ev);                      // your normal click handler
     }
   });
   //renderAllShapes();
